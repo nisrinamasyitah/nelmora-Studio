@@ -1,32 +1,45 @@
-# React + TypeScript + Vite
+# NelMora Studio System
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A private internal system for running NelMora, a small fragrance business. It replaces
+scattered spreadsheets with one place to track money in/out, stock on hand, and sales —
+direct and through resellers.
 
-Currently, two official plugins are available:
+Access is by invite only (accounts are issued manually, no public sign-up).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## What it does
 
-## React Compiler
+- **Dashboard** — a snapshot of the business: bank balance, total sales, units sold,
+  gross profit, active resellers, a sales calendar, recent sales, and low-stock alerts.
+- **Finance**
+  - R&D costs and first batch costs (what it took to get NelMora off the ground)
+  - Sale Tracker — every direct sale, logged by scent and date
+  - Bank Ledger — running cash balance from money in/out
+- **Resellers** — partners who sell on NelMora's behalf, their coverage area, and
+  their own sale log
+- **Scents Catalog** — every perfume NelMora carries, per gender line, and whether
+  it's available now (ADA) or coming soon
+- **Stock** — current inventory per scent, with a full history of stock changes
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Sales and stock are linked: logging a sale (direct or through a reseller) automatically
+deducts the quantity from that scent's stock. Gross profit is calculated per channel —
+direct sales and reseller sales carry different margins, since resellers buy at a
+different rate.
 
-## Expanding the Oxlint configuration
+## Tech
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+- React + TypeScript, built with Vite
+- [Supabase](https://supabase.com) for the database and login (Postgres + Auth,
+  row-level security restricts all data to signed-in accounts)
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## Running it locally
+
+```bash
+npm install
+cp .env.example .env.local   # fill in your Supabase project URL + anon key
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Other scripts: `npm run build` (type-check + production build), `npm run lint`,
+`npm run preview` (serve the production build locally).
+
+The database schema and seed data live in `supabase/*.sql`.
