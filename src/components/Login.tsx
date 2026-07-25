@@ -25,7 +25,11 @@ export default function Login() {
     <div className="auth-screen">
       <div className="auth-shell">
         <div className="auth-brand-col">
-          <img src="/logo-mark.png" alt="NelMora" className="auth-brand-logo" />
+          <div className="auth-brand-logo" aria-label="NelMora">
+            <span>N</span>
+            <span className="auth-brand-logo-divider" />
+            <span>M</span>
+          </div>
           <div className="auth-brand-tag">NELMORA SYSTEM</div>
           <div className="auth-brand-rule" />
           <p className="auth-brand-note">

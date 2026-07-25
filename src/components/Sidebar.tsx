@@ -32,7 +32,11 @@ export default function Sidebar({ user, page, onNavigate, onLogout }: SidebarPro
   return (
     <aside className="sidebar">
       <div className="brand">
-        <img src="/logo-mark.png" alt="NelMora" className="brand-logo" />
+        <div className="brand-logo" aria-label="NelMora">
+          <span>N</span>
+          <span className="brand-logo-divider" />
+          <span>M</span>
+        </div>
         <div className="brand-sub">Studio System</div>
       </div>
       <nav className="nav">
