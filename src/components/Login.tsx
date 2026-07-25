@@ -36,7 +36,7 @@ export default function Login() {
               <span className="auth-brand-logo-caption">Parfums</span>
             </div>
           </div>
-          <div className="auth-brand-tag">NELMORA SYSTEM</div>
+          
           <div className="auth-brand-rule" />
           <p className="auth-brand-note">
            A Story in every Scents .

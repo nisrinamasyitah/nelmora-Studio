@@ -43,7 +43,6 @@ export default function Sidebar({ user, page, onNavigate, onLogout }: SidebarPro
             <span className="brand-logo-caption">Parfums</span>
           </div>
         </div>
-        <div className="brand-sub">Studio System</div>
       </div>
       <nav className="nav">
         {links.map((link) => (
