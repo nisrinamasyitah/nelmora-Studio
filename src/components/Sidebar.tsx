@@ -32,11 +32,8 @@ export default function Sidebar({ user, page, onNavigate, onLogout }: SidebarPro
   return (
     <aside className="sidebar">
       <div className="brand">
-        <div className="brand-mark">N</div>
-        <div>
-          <div className="brand-name">NelMora</div>
-          <div className="brand-sub">Studio System</div>
-        </div>
+        <img src="/logo-mark.png" alt="NelMora" className="brand-logo" />
+        <div className="brand-sub">Studio System</div>
       </div>
       <nav className="nav">
         {links.map((link) => (
