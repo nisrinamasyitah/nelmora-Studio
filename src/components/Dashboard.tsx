@@ -1,5 +1,6 @@
 import { fmt, fmtDate } from '../lib/format';
 import { useAppData } from '../lib/AppDataContext';
+import { combineSales, combinedGrossProfit } from '../lib/sales';
 import type { StockEntry } from '../types';
 import SalesCalendar from './SalesCalendar';
 
@@ -9,17 +10,19 @@ export default function Dashboard() {
   if (loading) return <div className="empty-cell">Loading…</div>;
   if (error) return <div className="auth-error">{error}</div>;
 
-  const rndTotal = DATA.finance.rnd.reduce((s, x) => s + Number(x.cost || 0), 0);
-  const fbTotal = DATA.finance.firstBatch.reduce((s, x) => s + Number(x.cost || 0), 0);
+  const allSales = combineSales(DATA.finance.saleTracker, DATA.resellerSales, DATA.resellers);
+
   const bank = DATA.finance.bank;
   const balance = bank.length ? bank[bank.length - 1].balance : 0;
-  const salesTotal = DATA.finance.saleTracker.reduce((s, x) => s + Number(x.total || 0), 0);
-  const stockCount =
-    DATA.stock.men.reduce((s, x) => s + Number(x.stock || 0), 0) +
-    DATA.stock.women.reduce((s, x) => s + Number(x.stock || 0), 0);
+  const salesTotal = allSales.reduce((s, x) => s + Number(x.total || 0), 0);
   const resellerCount = DATA.resellers.length;
 
-  const recentSales = [...DATA.finance.saleTracker]
+  const directUnits = DATA.finance.saleTracker.reduce((s, x) => s + Number(x.qty || 0), 0);
+  const resellerUnits = DATA.resellerSales.reduce((s, x) => s + Number(x.qty || 0), 0);
+  const unitsSold = directUnits + resellerUnits;
+  const grossProfit = combinedGrossProfit(DATA.finance.saleTracker, DATA.resellerSales);
+
+  const recentSales = [...allSales]
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
     .slice(0, 6);
 
@@ -55,26 +58,26 @@ export default function Dashboard() {
         <div className="stat-card">
           <span className="label">Total Sales</span>
           <div className="value">RM {fmt(salesTotal)}</div>
-          <div className="sub">{DATA.finance.saleTracker.length} sale entries</div>
+          <div className="sub">{allSales.length} sale entries</div>
         </div>
         <div className="stat-card">
-          <span className="label">R&amp;D + First Batch</span>
-          <div className="value">RM {fmt(rndTotal + fbTotal)}</div>
-          <div className="sub">total invested so far</div>
-        </div>
-        <div className="stat-card">
-          <span className="label">Units In Stock</span>
-          <div className="value">{stockCount}</div>
-          <div className="sub">across men &amp; women lines</div>
+          <span className="label">Units Sold</span>
+          <div className="value">{unitsSold}</div>
+          <div className="sub">{directUnits} direct + {resellerUnits} reseller</div>
         </div>
         <div className="stat-card">
           <span className="label">Resellers</span>
           <div className="value">{resellerCount}</div>
           <div className="sub">active partners</div>
         </div>
+        <div className="stat-card">
+          <span className="label">Gross Profit</span>
+          <div className="value">RM {fmt(grossProfit)}</div>
+          <div className="sub">RM7.80/bottle direct · RM3.90/bottle reseller</div>
+        </div>
       </div>
 
-      <SalesCalendar sales={DATA.finance.saleTracker} />
+      <SalesCalendar sales={allSales} />
 
       <div className="section-block">
         <div className="section-head">
@@ -87,6 +90,7 @@ export default function Dashboard() {
               <tr>
                 <th>Date</th>
                 <th>Perfume</th>
+                <th>Via</th>
                 <th>Qty</th>
                 <th>Notes</th>
                 <th style={{ textAlign: 'right' }}>Total (RM)</th>
@@ -98,6 +102,13 @@ export default function Dashboard() {
                   <tr key={s.id}>
                     <td>{fmtDate(s.date)}</td>
                     <td style={{ color: 'var(--ink)', fontWeight: 500 }}>{s.perfume}</td>
+                    <td>
+                      {s.source === 'reseller' ? (
+                        <span className="source-tag">{s.resellerName}</span>
+                      ) : (
+                        <span className="source-tag source-tag-direct">Direct</span>
+                      )}
+                    </td>
                     <td className="num">{s.qty}</td>
                     <td>{s.notes || '—'}</td>
                     <td className="num" style={{ textAlign: 'right' }}>
@@ -107,7 +118,7 @@ export default function Dashboard() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="empty-cell">
+                  <td colSpan={6} className="empty-cell">
                     No sales logged yet.
                   </td>
                 </tr>

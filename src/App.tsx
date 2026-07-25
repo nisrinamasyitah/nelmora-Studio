@@ -3,6 +3,9 @@ import type { Session } from '@supabase/supabase-js';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Finance from './components/Finance';
+import Resellers from './components/Resellers';
+import Stock from './components/Stock';
+import Scents from './components/Scents';
 import Sidebar, { type Page } from './components/Sidebar';
 import Topbar from './components/Topbar';
 import { supabase } from './lib/supabaseClient';
@@ -12,6 +15,9 @@ import type { Account } from './types';
 const PAGE_TITLES: Record<Page, string> = {
   dashboard: 'Dashboard',
   finance: 'Finance',
+  resellers: 'Resellers',
+  stock: 'Stock',
+  scents: 'Scents Catalog',
 };
 
 function App() {
@@ -53,6 +59,9 @@ function App() {
           <div className="content">
             {page === 'dashboard' && <Dashboard />}
             {page === 'finance' && <Finance />}
+            {page === 'resellers' && <Resellers />}
+            {page === 'stock' && <Stock />}
+            {page === 'scents' && <Scents />}
           </div>
         </main>
       </div>

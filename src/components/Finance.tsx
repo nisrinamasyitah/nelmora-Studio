@@ -1,6 +1,10 @@
 import { useState, type KeyboardEvent } from 'react';
-import { fmt, fmtDate, latestSaleMonth } from '../lib/format';
+import { fmt, fmtDate, latestSaleMonth, todayStr } from '../lib/format';
 import { useAppData } from '../lib/AppDataContext';
+import { BOTTLE_PRICE } from '../lib/constants';
+import { combineSales } from '../lib/sales';
+import { findScentById, findScentByLabel, scentLabel } from '../lib/scents';
+import { adjustStock } from '../lib/stock';
 import { IconPlus, IconTrash } from './Icons';
 import SalesCalendar from './SalesCalendar';
 
@@ -19,24 +23,33 @@ const TABS: { key: FinanceTab; label: string }[] = [
   { key: 'bank', label: 'Bank Ledger' },
 ];
 
-const BOTTLE_PRICE = 16;
-
 export default function Finance() {
-  const { data, loading, error, addCostItem, deleteCostItem, addSaleEntry, deleteSaleEntry, addBankEntry, deleteBankEntry } =
-    useAppData();
+  const {
+    data,
+    loading,
+    error,
+    addCostItem,
+    deleteCostItem,
+    addSaleEntry,
+    deleteSaleEntry,
+    addStockEntry,
+    addBankEntry,
+    deleteBankEntry,
+  } = useAppData();
   const [tab, setTab] = useState<FinanceTab>('rnd');
-  const [calendarMonth, setCalendarMonth] = useState(() => latestSaleMonth(data.finance.saleTracker));
+  const allSales = combineSales(data.finance.saleTracker, data.resellerSales, data.resellers);
+  const [calendarMonth, setCalendarMonth] = useState(() => latestSaleMonth(allSales));
   const [rndDraft, setRndDraft] = useState({ name: '', cost: '' });
   const [fbDraft, setFbDraft] = useState({ name: '', cost: '' });
-  const [saleDraft, setSaleDraft] = useState({ date: '', perfume: '', qty: '1', notes: '', total: String(BOTTLE_PRICE) });
-  const [bankDraft, setBankDraft] = useState({ date: '', in: '', out: '' });
+  const [saleDraft, setSaleDraft] = useState({ date: todayStr(), scentId: '', qty: '1', notes: '', total: String(BOTTLE_PRICE) });
+  const [bankDraft, setBankDraft] = useState({ date: todayStr(), in: '', out: '' });
 
   if (loading) return <div className="empty-cell">Loading…</div>;
   if (error) return <div className="auth-error">{error}</div>;
 
   const rndTotal = data.finance.rnd.reduce((s, x) => s + Number(x.cost || 0), 0);
   const fbTotal = data.finance.firstBatch.reduce((s, x) => s + Number(x.cost || 0), 0);
-  const salesTotal = data.finance.saleTracker.reduce((s, x) => s + Number(x.total || 0), 0);
+  const salesTotal = allSales.reduce((s, x) => s + Number(x.total || 0), 0);
   const bankBalance = data.finance.bank.length ? data.finance.bank[data.finance.bank.length - 1].balance : 0;
 
   // ---- R&D ----
@@ -65,23 +78,32 @@ export default function Finance() {
     setSaleDraft((d) => ({ ...d, qty, total: n > 0 ? String(n * BOTTLE_PRICE) : d.total }));
   }
   async function addSale() {
-    if (!saleDraft.date || !saleDraft.perfume.trim()) return;
+    const found = findScentById(data.scents, saleDraft.scentId);
+    if (!saleDraft.date || !found) return;
+    const { scent, gender } = found;
+    const qty = Number(saleDraft.qty) || 1;
     await addSaleEntry({
       date: saleDraft.date,
-      perfume: saleDraft.perfume.trim(),
-      qty: Number(saleDraft.qty) || 1,
+      perfume: scentLabel(gender, scent.inline),
+      qty,
       notes: saleDraft.notes.trim(),
       total: Number(saleDraft.total) || 0,
     });
-    setSaleDraft({ date: '', perfume: '', qty: '1', notes: '', total: String(BOTTLE_PRICE) });
+    await adjustStock(addStockEntry, data.stock, gender, scent, saleDraft.date, -qty);
+    setSaleDraft({ date: todayStr(), scentId: '', qty: '1', notes: '', total: String(BOTTLE_PRICE) });
   }
-  function deleteSale(id: string) {
-    deleteSaleEntry(id);
+  async function deleteSale(id: string) {
+    const entry = data.finance.saleTracker.find((s) => s.id === id);
+    await deleteSaleEntry(id);
+    const found = entry && findScentByLabel(data.scents, entry.perfume);
+    if (entry && found) {
+      await adjustStock(addStockEntry, data.stock, found.gender, found.scent, todayStr(), entry.qty);
+    }
   }
   const menScents = data.scents.men.filter((s) => s.status === 'ADA');
   const womenScents = data.scents.women.filter((s) => s.status === 'ADA');
 
-  const salesByDateDesc = data.finance.saleTracker
+  const salesByDateDesc = allSales
     .filter((s) => {
       if (!s.date) return false;
       const d = new Date(s.date + 'T00:00:00');
@@ -101,7 +123,7 @@ export default function Finance() {
   async function addBank() {
     if (!bankDraft.date) return;
     await addBankEntry({ date: bankDraft.date, in: bankDraftIn, out: bankDraftOut, balance: bankDraftPreviewBalance });
-    setBankDraft({ date: '', in: '', out: '' });
+    setBankDraft({ date: todayStr(), in: '', out: '' });
   }
   function deleteBank(id: string) {
     deleteBankEntry(id);
@@ -125,7 +147,7 @@ export default function Finance() {
         <button className={`stat-card clickable${tab === 'sale' ? ' is-current' : ''}`} onClick={() => setTab('sale')}>
           <span className="label">Total Sales</span>
           <div className="value">RM {fmt(salesTotal)}</div>
-          <div className="sub">{data.finance.saleTracker.length} sale entries</div>
+          <div className="sub">{allSales.length} sale entries · direct + reseller</div>
         </button>
         <button className={`stat-card clickable${tab === 'rnd' ? ' is-current' : ''}`} onClick={() => setTab('rnd')}>
           <span className="label">R&amp;D Costs</span>
@@ -293,7 +315,7 @@ export default function Finance() {
       {tab === 'sale' && (
       <>
       <SalesCalendar
-        sales={data.finance.saleTracker}
+        sales={allSales}
         onMonthChange={(year, month) => setCalendarMonth({ year, month })}
       />
       <div className="section-block">
@@ -309,6 +331,7 @@ export default function Finance() {
               <tr>
                 <th>Date</th>
                 <th>Perfume</th>
+                <th>Via</th>
                 <th>Qty</th>
                 <th>Notes</th>
                 <th style={{ textAlign: 'right' }}>Total (RM)</th>
@@ -321,21 +344,30 @@ export default function Finance() {
                   <tr key={s.id}>
                     <td>{fmtDate(s.date)}</td>
                     <td style={{ color: 'var(--ink)', fontWeight: 500 }}>{s.perfume}</td>
+                    <td>
+                      {s.source === 'reseller' ? (
+                        <span className="source-tag">{s.resellerName}</span>
+                      ) : (
+                        <span className="source-tag source-tag-direct">Direct</span>
+                      )}
+                    </td>
                     <td className="num">{s.qty}</td>
                     <td>{s.notes || '—'}</td>
                     <td className="num" style={{ textAlign: 'right' }}>
                       {fmt(s.total)}
                     </td>
                     <td>
-                      <button className="btn-icon-delete" onClick={() => deleteSale(s.id)} aria-label="Remove sale">
-                        <IconTrash />
-                      </button>
+                      {s.source === 'direct' && (
+                        <button className="btn-icon-delete" onClick={() => deleteSale(s.id)} aria-label="Remove sale">
+                          <IconTrash />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="empty-cell">
+                  <td colSpan={7} className="empty-cell">
                     No sales logged in {calendarMonthLabel}.
                   </td>
                 </tr>
@@ -350,26 +382,27 @@ export default function Finance() {
                 </td>
                 <td>
                   <select
-                    value={saleDraft.perfume}
-                    onChange={(e) => setSaleDraft((d) => ({ ...d, perfume: e.target.value }))}
+                    value={saleDraft.scentId}
+                    onChange={(e) => setSaleDraft((d) => ({ ...d, scentId: e.target.value }))}
                   >
                     <option value="">Select a scent</option>
                     <optgroup label="Men">
                       {menScents.map((s) => (
-                        <option key={s.id} value={`MEN - NelMora ${s.inline}`}>
+                        <option key={s.id} value={s.id}>
                           {s.inline}
                         </option>
                       ))}
                     </optgroup>
                     <optgroup label="Women">
                       {womenScents.map((s) => (
-                        <option key={s.id} value={`WOMEN - NelMora ${s.inline}`}>
+                        <option key={s.id} value={s.id}>
                           {s.inline}
                         </option>
                       ))}
                     </optgroup>
                   </select>
                 </td>
+                <td style={{ color: 'var(--ink-4)' }}>—</td>
                 <td>
                   <input
                     type="number"

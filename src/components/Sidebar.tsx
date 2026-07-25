@@ -2,16 +2,10 @@ import type { ReactNode } from 'react';
 import type { Account } from '../types';
 import { IconDashboard, IconFinance, IconResellers, IconScents, IconStock } from './Icons';
 
-export type Page = 'dashboard' | 'finance';
+export type Page = 'dashboard' | 'finance' | 'resellers' | 'stock' | 'scents';
 
 interface NavLink {
   key: Page;
-  label: string;
-  icon: ReactNode;
-}
-
-interface SoonItem {
-  key: string;
   label: string;
   icon: ReactNode;
 }
@@ -26,12 +20,12 @@ interface SidebarProps {
 const links: NavLink[] = [
   { key: 'dashboard', label: 'Dashboard', icon: <IconDashboard /> },
   { key: 'finance', label: 'Finance', icon: <IconFinance /> },
+  { key: 'resellers', label: 'Resellers', icon: <IconResellers /> },
 ];
 
-const soonItems: SoonItem[] = [
+const opsLinks: NavLink[] = [
   { key: 'scents', label: 'Scents Catalog', icon: <IconScents /> },
   { key: 'stock', label: 'Stock', icon: <IconStock /> },
-  { key: 'resellers', label: 'Resellers', icon: <IconResellers /> },
 ];
 
 export default function Sidebar({ user, page, onNavigate, onLogout }: SidebarProps) {
@@ -56,11 +50,14 @@ export default function Sidebar({ user, page, onNavigate, onLogout }: SidebarPro
           </button>
         ))}
         <div className="nav-section-label">Operations &amp; Partners</div>
-        {soonItems.map((item) => (
-          <button key={item.key} className="nav-item disabled" title="Coming soon" disabled>
-            {item.icon}
-            {item.label}
-            <span className="nav-soon">Soon</span>
+        {opsLinks.map((link) => (
+          <button
+            key={link.key}
+            className={`nav-item${page === link.key ? ' active' : ''}`}
+            onClick={() => onNavigate(link.key)}
+          >
+            {link.icon}
+            {link.label}
           </button>
         ))}
       </nav>

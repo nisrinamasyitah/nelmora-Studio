@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { AppData, SaleEntry, BankEntry } from '../types';
+import type { AppData, SaleEntry, BankEntry, ScentEntry, StockEntry, ResellerSale } from '../types';
 import {
   fetchAppData,
   insertCostItem,
@@ -8,6 +8,15 @@ import {
   removeSaleEntry,
   insertBankEntry,
   removeBankEntry,
+  insertScent,
+  updateScentStatus,
+  removeScent,
+  insertStockEntry,
+  removeStockEntry,
+  insertReseller,
+  removeReseller,
+  insertResellerSale,
+  removeResellerSale,
 } from './api';
 
 const EMPTY: AppData = {
@@ -15,6 +24,7 @@ const EMPTY: AppData = {
   scents: { men: [], women: [] },
   stock: { men: [], women: [] },
   resellers: [],
+  resellerSales: [],
 };
 
 interface AppDataContextValue {
@@ -28,6 +38,15 @@ interface AppDataContextValue {
   deleteSaleEntry: (id: string) => Promise<void>;
   addBankEntry: (entry: Omit<BankEntry, 'id'>) => Promise<void>;
   deleteBankEntry: (id: string) => Promise<void>;
+  addScent: (gender: 'men' | 'women', entry: Omit<ScentEntry, 'id'>) => Promise<void>;
+  setScentStatus: (id: string, status: 'ADA' | 'SOON') => Promise<void>;
+  deleteScent: (id: string) => Promise<void>;
+  addStockEntry: (gender: 'men' | 'women', entry: Omit<StockEntry, 'id'>) => Promise<void>;
+  deleteStockEntry: (id: string) => Promise<void>;
+  addReseller: (name: string, placeCover: string) => Promise<void>;
+  deleteReseller: (id: string) => Promise<void>;
+  addResellerSale: (entry: Omit<ResellerSale, 'id'>) => Promise<void>;
+  deleteResellerSale: (id: string) => Promise<void>;
 }
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
@@ -92,6 +111,64 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     async deleteBankEntry(id) {
       await removeBankEntry(id);
       setData((d) => ({ ...d, finance: { ...d.finance, bank: d.finance.bank.filter((x) => x.id !== id) } }));
+    },
+    async addScent(gender, entry) {
+      const row = await insertScent(gender, entry);
+      setData((d) => ({ ...d, scents: { ...d.scents, [gender]: [...d.scents[gender], row] } }));
+    },
+    async setScentStatus(id, status) {
+      await updateScentStatus(id, status);
+      setData((d) => ({
+        ...d,
+        scents: {
+          men: d.scents.men.map((s) => (s.id === id ? { ...s, status } : s)),
+          women: d.scents.women.map((s) => (s.id === id ? { ...s, status } : s)),
+        },
+      }));
+    },
+    async deleteScent(id) {
+      await removeScent(id);
+      setData((d) => ({
+        ...d,
+        scents: {
+          men: d.scents.men.filter((x) => x.id !== id),
+          women: d.scents.women.filter((x) => x.id !== id),
+        },
+      }));
+    },
+    async addStockEntry(gender, entry) {
+      const row = await insertStockEntry(gender, entry);
+      setData((d) => ({ ...d, stock: { ...d.stock, [gender]: [...d.stock[gender], row] } }));
+    },
+    async deleteStockEntry(id) {
+      await removeStockEntry(id);
+      setData((d) => ({
+        ...d,
+        stock: {
+          men: d.stock.men.filter((x) => x.id !== id),
+          women: d.stock.women.filter((x) => x.id !== id),
+        },
+      }));
+    },
+    async addReseller(name, placeCover) {
+      const row = await insertReseller(name, placeCover);
+      setData((d) => ({ ...d, resellers: [...d.resellers, row] }));
+    },
+    async deleteReseller(id) {
+      await removeReseller(id);
+      setData((d) => ({
+        ...d,
+        resellers: d.resellers.filter((x) => x.id !== id),
+        resellerSales: d.resellerSales.filter((x) => x.resellerId !== id),
+      }));
+    },
+    async addResellerSale(entry) {
+      const row = await insertResellerSale(entry);
+      setData((d) => ({ ...d, resellerSales: [...d.resellerSales, row] }));
+    },
+    async deleteResellerSale(id) {
+      await removeResellerSale(id);
+      setData((d) => ({ ...d, resellerSales: d.resellerSales.filter((x) => x.id !== id) }));
     },
   };
 

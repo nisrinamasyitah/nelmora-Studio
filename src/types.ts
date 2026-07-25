@@ -46,6 +46,22 @@ export interface StockEntry {
   stock: number;
 }
 
+export interface Reseller {
+  id: string;
+  name: string;
+  placeCover: string;
+}
+
+export interface ResellerSale {
+  id: string;
+  resellerId: string;
+  date: string;
+  perfume: string;
+  qty: number;
+  notes: string;
+  total: number;
+}
+
 export interface AppData {
   finance: {
     rnd: CostItem[];
@@ -61,5 +77,6 @@ export interface AppData {
     men: StockEntry[];
     women: StockEntry[];
   };
-  resellers: unknown[];
+  resellers: Reseller[];
+  resellerSales: ResellerSale[];
 }

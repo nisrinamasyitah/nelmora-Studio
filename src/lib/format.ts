@@ -4,6 +4,11 @@ export function uid(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 }
 
+export function todayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export function fmt(n: number): string {
   n = Number(n) || 0;
   return n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

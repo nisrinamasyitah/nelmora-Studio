@@ -1,0 +1,4 @@
+export const BOTTLE_PRICE = 16;
+export const MODAL_PER_BOTTLE = 8.2;
+export const PROFIT_PER_BOTTLE = BOTTLE_PRICE - MODAL_PER_BOTTLE;
+export const RESELLER_PROFIT_PER_BOTTLE = 3.9;
