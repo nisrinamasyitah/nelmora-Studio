@@ -1,6 +1,6 @@
 # NelMora Studio System
 
-A private internal system for running NelMora, a small fragrance business. It replaces
+A private internal system for running NelMora a small fragrance business by nisrina masyitah . It replaces
 scattered spreadsheets with one place to track money in/out, stock on hand, and sales —
 direct and through resellers.
 
