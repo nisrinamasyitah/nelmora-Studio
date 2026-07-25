@@ -17,7 +17,7 @@ export default function Login() {
     });
     setSubmitting(false);
     if (signInError) {
-      setError('Email or password is incorrect. Contact IT if you need access.');
+      setError(signInError.message);
     }
   }
 
@@ -26,10 +26,10 @@ export default function Login() {
       <div className="auth-shell">
         <div className="auth-brand-col">
           <img src="/logo-mark.png" alt="NelMora" className="auth-brand-logo" />
-          <div className="auth-brand-tag">Studio System</div>
+          <div className="auth-brand-tag">NELMORA SYSTEM</div>
           <div className="auth-brand-rule" />
           <p className="auth-brand-note">
-            A small operation, kept in order — investment, sales and stock, all in one ledger.
+           A Story in every Scents .
           </p>
         </div>
 
@@ -67,8 +67,6 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="auth-note">Accounts are issued by IT. If you don't have login details, contact your administrator.</p>
-          <p className="auth-note">Forgot your password? Contact your administrator for a reset.</p>
         </div>
       </div>
     </div>
