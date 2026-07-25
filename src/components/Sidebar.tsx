@@ -32,10 +32,16 @@ export default function Sidebar({ user, page, onNavigate, onLogout }: SidebarPro
   return (
     <aside className="sidebar">
       <div className="brand">
-        <div className="brand-logo" aria-label="NelMora">
-          <span>N</span>
+        <div className="brand-logo" aria-label="NelMora Parfums">
+          <div className="brand-logo-col">
+            <span>N</span>
+            <span className="brand-logo-caption">NelMora</span>
+          </div>
           <span className="brand-logo-divider" />
-          <span>M</span>
+          <div className="brand-logo-col">
+            <span>M</span>
+            <span className="brand-logo-caption">Parfums</span>
+          </div>
         </div>
         <div className="brand-sub">Studio System</div>
       </div>

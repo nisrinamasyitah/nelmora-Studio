@@ -109,11 +109,17 @@ svg{display:block;}
 }
 .auth-brand-logo{
   position:relative; z-index:1;
-  display:flex; align-items:center; gap:16px; margin-bottom:22px;
+  display:flex; align-items:flex-end; gap:22px; margin-bottom:26px;
   font-family:var(--font-display); font-weight:600; font-size:46px; line-height:1;
   color:#fff;
 }
+.auth-brand-logo-col{position:relative; display:flex; align-items:flex-end; padding-bottom:10px;}
 .auth-brand-logo-divider{width:1.5px; height:38px; background:rgba(255,255,255,0.4);}
+.auth-brand-logo-caption{
+  position:absolute; left:50%; bottom:-11px; transform:translateX(-50%);
+  font-family:var(--font); font-size:9.5px; letter-spacing:.05em; text-transform:uppercase;
+  font-weight:600; color:rgba(255,255,255,0.7); white-space:nowrap;
+}
 .auth-brand-tag{position:relative; z-index:1; font-size:11.5px; letter-spacing:.07em; text-transform:uppercase; color:rgba(255,255,255,0.5); font-weight:600;}
 .auth-brand-rule{position:relative; z-index:1; width:32px; height:1.5px; background:rgba(255,255,255,0.3); margin:24px 0;}
 .auth-brand-note{position:relative; z-index:1; font-size:13px; line-height:1.65; color:rgba(255,255,255,0.6); max-width:220px;}
@@ -170,13 +176,19 @@ svg{display:block;}
   content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
   background:linear-gradient(165deg, rgba(255,255,255,0.09), transparent 40%);
 }
-.brand{position:relative; z-index:1; padding:2px 20px 20px; margin-bottom:10px; display:flex; flex-direction:column; align-items:flex-start; gap:8px; border-bottom:1px solid var(--sidebar-border);}
+.brand{position:relative; z-index:1; padding:2px 20px 20px; margin-bottom:10px; display:flex; flex-direction:column; align-items:flex-start; gap:16px; border-bottom:1px solid var(--sidebar-border);}
 .brand-logo{
-  display:flex; align-items:center; gap:10px;
+  display:flex; align-items:flex-end; gap:14px;
   font-family:var(--font-display); font-weight:600; font-size:26px; line-height:1;
-  color:#fff;
+  color:#fff; margin-bottom:2px;
 }
-.brand-logo-divider{width:1px; height:22px; background:rgba(255,255,255,0.4);}
+.brand-logo-col{position:relative; display:flex; align-items:flex-end; padding-bottom:6px;}
+.brand-logo-divider{width:1px; height:20px; background:rgba(255,255,255,0.4);}
+.brand-logo-caption{
+  position:absolute; left:50%; bottom:-7px; transform:translateX(-50%);
+  font-family:var(--font); font-size:6.5px; letter-spacing:.04em; text-transform:uppercase;
+  font-weight:700; color:rgba(255,255,255,0.65); white-space:nowrap;
+}
 .brand-sub{font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--sidebar-text); font-weight:600;}
 .nav{position:relative; z-index:1; flex:1; padding:14px 12px 0;}
 .nav-item{

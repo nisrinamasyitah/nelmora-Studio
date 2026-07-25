@@ -25,10 +25,16 @@ export default function Login() {
     <div className="auth-screen">
       <div className="auth-shell">
         <div className="auth-brand-col">
-          <div className="auth-brand-logo" aria-label="NelMora">
-            <span>N</span>
+          <div className="auth-brand-logo" aria-label="NelMora Parfums">
+            <div className="auth-brand-logo-col">
+              <span>N</span>
+              <span className="auth-brand-logo-caption">NelMora</span>
+            </div>
             <span className="auth-brand-logo-divider" />
-            <span>M</span>
+            <div className="auth-brand-logo-col">
+              <span>M</span>
+              <span className="auth-brand-logo-caption">Parfums</span>
+            </div>
           </div>
           <div className="auth-brand-tag">NELMORA SYSTEM</div>
           <div className="auth-brand-rule" />
