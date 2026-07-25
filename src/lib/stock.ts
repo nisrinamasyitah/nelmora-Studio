@@ -1,12 +1,20 @@
 import type { ScentEntry, StockEntry } from '../types';
 import type { Gender } from './scents';
 
+function isNewer(a: StockEntry, b: StockEntry): boolean {
+  const dateA = a.date || '';
+  const dateB = b.date || '';
+  if (dateA !== dateB) return dateA > dateB;
+  // Same day (common: a sale's auto-decrement and a later restore-on-delete
+  // both land on today) — break the tie with the real DB creation timestamp,
+  // not array/fetch order, which Postgres doesn't guarantee for equal dates.
+  return (a.createdAt || '') > (b.createdAt || '');
+}
+
 export function latestStockByCode(list: StockEntry[]): Record<string, StockEntry> {
   const map: Record<string, StockEntry> = {};
   for (const s of list) {
-    // >= so that, among same-day entries, the one added later (later in the
-    // fetched/appended order) wins as "current" instead of the first one seen.
-    if (!map[s.code] || (s.date || '') >= (map[s.code].date || '')) map[s.code] = s;
+    if (!map[s.code] || isNewer(s, map[s.code])) map[s.code] = s;
   }
   return map;
 }
@@ -16,7 +24,7 @@ export function currentStockFor(list: StockEntry[], code: string): number {
 }
 
 export async function adjustStock(
-  addStockEntry: (gender: Gender, entry: Omit<StockEntry, 'id'>) => Promise<void>,
+  addStockEntry: (gender: Gender, entry: Omit<StockEntry, 'id' | 'createdAt'>) => Promise<void>,
   stockByGender: Record<Gender, StockEntry[]>,
   gender: Gender,
   scent: ScentEntry,

@@ -44,6 +44,7 @@ export interface StockEntry {
   perfume: string;
   inline: string;
   stock: number;
+  createdAt: string;
 }
 
 export interface Reseller {

@@ -15,6 +15,28 @@ function mapBank(row: BankRow): BankEntry {
   return { id: row.id, date: row.date, in: row.cash_in, out: row.cash_out, balance: row.balance };
 }
 
+interface StockRow {
+  id: string;
+  date: string;
+  code: string;
+  perfume: string;
+  inline: string;
+  stock: number;
+  created_at: string;
+}
+
+function mapStock(row: StockRow): StockEntry {
+  return {
+    id: row.id,
+    date: row.date,
+    code: row.code,
+    perfume: row.perfume,
+    inline: row.inline,
+    stock: row.stock,
+    createdAt: row.created_at,
+  };
+}
+
 interface ResellerRow {
   id: string;
   name: string;
@@ -56,8 +78,18 @@ export async function fetchAppData(): Promise<AppData> {
       supabase.from('bank_entries').select('id,date,cash_in,cash_out,balance').order('date'),
       supabase.from('scents').select('id,code,perfume,inline,status').eq('gender', 'men').order('created_at'),
       supabase.from('scents').select('id,code,perfume,inline,status').eq('gender', 'women').order('created_at'),
-      supabase.from('stock_entries').select('id,date,code,perfume,inline,stock').eq('gender', 'men').order('date'),
-      supabase.from('stock_entries').select('id,date,code,perfume,inline,stock').eq('gender', 'women').order('date'),
+      supabase
+        .from('stock_entries')
+        .select('id,date,code,perfume,inline,stock,created_at')
+        .eq('gender', 'men')
+        .order('date')
+        .order('created_at'),
+      supabase
+        .from('stock_entries')
+        .select('id,date,code,perfume,inline,stock,created_at')
+        .eq('gender', 'women')
+        .order('date')
+        .order('created_at'),
       supabase.from('resellers').select('id,name,place_cover').order('created_at'),
       supabase.from('reseller_sales').select('id,reseller_id,date,perfume,qty,notes,total').order('date'),
     ]);
@@ -74,7 +106,10 @@ export async function fetchAppData(): Promise<AppData> {
       bank: (bank.data as BankRow[]).map(mapBank),
     },
     scents: { men: scentsMen.data as ScentEntry[], women: scentsWomen.data as ScentEntry[] },
-    stock: { men: stockMen.data as StockEntry[], women: stockWomen.data as StockEntry[] },
+    stock: {
+      men: (stockMen.data as StockRow[]).map(mapStock),
+      women: (stockWomen.data as StockRow[]).map(mapStock),
+    },
     resellers: (resellers.data as ResellerRow[]).map(mapReseller),
     resellerSales: (resellerSales.data as ResellerSaleRow[]).map(mapResellerSale),
   };
@@ -145,14 +180,17 @@ export async function removeScent(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function insertStockEntry(gender: Gender, entry: Omit<StockEntry, 'id'>): Promise<StockEntry> {
+export async function insertStockEntry(
+  gender: Gender,
+  entry: Omit<StockEntry, 'id' | 'createdAt'>,
+): Promise<StockEntry> {
   const { data, error } = await supabase
     .from('stock_entries')
     .insert({ gender, date: entry.date, code: entry.code, perfume: entry.perfume, inline: entry.inline, stock: entry.stock })
-    .select('id,date,code,perfume,inline,stock')
+    .select('id,date,code,perfume,inline,stock,created_at')
     .single();
   if (error) throw error;
-  return data as StockEntry;
+  return mapStock(data as StockRow);
 }
 
 export async function removeStockEntry(id: string): Promise<void> {

@@ -41,7 +41,7 @@ interface AppDataContextValue {
   addScent: (gender: 'men' | 'women', entry: Omit<ScentEntry, 'id'>) => Promise<void>;
   setScentStatus: (id: string, status: 'ADA' | 'SOON') => Promise<void>;
   deleteScent: (id: string) => Promise<void>;
-  addStockEntry: (gender: 'men' | 'women', entry: Omit<StockEntry, 'id'>) => Promise<void>;
+  addStockEntry: (gender: 'men' | 'women', entry: Omit<StockEntry, 'id' | 'createdAt'>) => Promise<void>;
   deleteStockEntry: (id: string) => Promise<void>;
   addReseller: (name: string, placeCover: string) => Promise<void>;
   deleteReseller: (id: string) => Promise<void>;
