@@ -55,6 +55,7 @@ interface ResellerSaleRow {
   qty: number;
   notes: string;
   total: number;
+  created_at: string;
 }
 
 function mapResellerSale(row: ResellerSaleRow): ResellerSale {
@@ -66,6 +67,29 @@ function mapResellerSale(row: ResellerSaleRow): ResellerSale {
     qty: row.qty,
     notes: row.notes,
     total: row.total,
+    createdAt: row.created_at,
+  };
+}
+
+interface SaleEntryRow {
+  id: string;
+  date: string;
+  perfume: string;
+  qty: number;
+  notes: string;
+  total: number;
+  created_at: string;
+}
+
+function mapSaleEntry(row: SaleEntryRow): SaleEntry {
+  return {
+    id: row.id,
+    date: row.date,
+    perfume: row.perfume,
+    qty: row.qty,
+    notes: row.notes,
+    total: row.total,
+    createdAt: row.created_at,
   };
 }
 
@@ -74,7 +98,7 @@ export async function fetchAppData(): Promise<AppData> {
     await Promise.all([
       supabase.from('cost_items').select('id,name,cost').eq('category', 'rnd').order('created_at'),
       supabase.from('cost_items').select('id,name,cost').eq('category', 'first_batch').order('created_at'),
-      supabase.from('sale_entries').select('id,date,perfume,qty,notes,total').order('date'),
+      supabase.from('sale_entries').select('id,date,perfume,qty,notes,total,created_at').order('created_at'),
       supabase.from('bank_entries').select('id,date,cash_in,cash_out,balance').order('date'),
       supabase.from('scents').select('id,code,perfume,inline,status').eq('gender', 'men').order('created_at'),
       supabase.from('scents').select('id,code,perfume,inline,status').eq('gender', 'women').order('created_at'),
@@ -91,7 +115,10 @@ export async function fetchAppData(): Promise<AppData> {
         .order('date')
         .order('created_at'),
       supabase.from('resellers').select('id,name,place_cover').order('created_at'),
-      supabase.from('reseller_sales').select('id,reseller_id,date,perfume,qty,notes,total').order('date'),
+      supabase
+        .from('reseller_sales')
+        .select('id,reseller_id,date,perfume,qty,notes,total,created_at')
+        .order('created_at'),
     ]);
 
   for (const r of [rnd, firstBatch, sales, bank, scentsMen, scentsWomen, stockMen, stockWomen, resellers, resellerSales]) {
@@ -102,7 +129,7 @@ export async function fetchAppData(): Promise<AppData> {
     finance: {
       rnd: rnd.data as CostItem[],
       firstBatch: firstBatch.data as CostItem[],
-      saleTracker: sales.data as SaleEntry[],
+      saleTracker: (sales.data as SaleEntryRow[]).map(mapSaleEntry),
       bank: (bank.data as BankRow[]).map(mapBank),
     },
     scents: { men: scentsMen.data as ScentEntry[], women: scentsWomen.data as ScentEntry[] },
@@ -130,14 +157,14 @@ export async function removeCostItem(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function insertSaleEntry(entry: Omit<SaleEntry, 'id'>): Promise<SaleEntry> {
+export async function insertSaleEntry(entry: Omit<SaleEntry, 'id' | 'createdAt'>): Promise<SaleEntry> {
   const { data, error } = await supabase
     .from('sale_entries')
     .insert(entry)
-    .select('id,date,perfume,qty,notes,total')
+    .select('id,date,perfume,qty,notes,total,created_at')
     .single();
   if (error) throw error;
-  return data as SaleEntry;
+  return mapSaleEntry(data as SaleEntryRow);
 }
 
 export async function removeSaleEntry(id: string): Promise<void> {
@@ -213,7 +240,7 @@ export async function removeReseller(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function insertResellerSale(entry: Omit<ResellerSale, 'id'>): Promise<ResellerSale> {
+export async function insertResellerSale(entry: Omit<ResellerSale, 'id' | 'createdAt'>): Promise<ResellerSale> {
   const { data, error } = await supabase
     .from('reseller_sales')
     .insert({
@@ -224,7 +251,7 @@ export async function insertResellerSale(entry: Omit<ResellerSale, 'id'>): Promi
       notes: entry.notes,
       total: entry.total,
     })
-    .select('id,reseller_id,date,perfume,qty,notes,total')
+    .select('id,reseller_id,date,perfume,qty,notes,total,created_at')
     .single();
   if (error) throw error;
   return mapResellerSale(data as ResellerSaleRow);

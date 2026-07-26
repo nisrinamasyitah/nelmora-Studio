@@ -1,6 +1,7 @@
 import { fmt, fmtDate } from '../lib/format';
 import { useAppData } from '../lib/AppDataContext';
 import { combineSales, combinedGrossProfit } from '../lib/sales';
+import { latestStockByCode } from '../lib/stock';
 import type { StockEntry } from '../types';
 import SalesCalendar from './SalesCalendar';
 
@@ -23,22 +24,14 @@ export default function Dashboard() {
   const grossProfit = combinedGrossProfit(DATA.finance.saleTracker, DATA.resellerSales);
 
   const recentSales = [...allSales]
-    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
     .slice(0, 6);
 
-  const allStock: (StockEntry & { line: string })[] = [
-    ...DATA.stock.men.map((s) => ({ ...s, line: 'Men' })),
-    ...DATA.stock.women.map((s) => ({ ...s, line: 'Women' })),
+  const currentStock: (StockEntry & { line: string })[] = [
+    ...Object.values(latestStockByCode(DATA.stock.men)).map((s) => ({ ...s, line: 'Men' })),
+    ...Object.values(latestStockByCode(DATA.stock.women)).map((s) => ({ ...s, line: 'Women' })),
   ];
-  const latestByCode: Record<string, StockEntry & { line: string }> = {};
-  allStock.forEach((s) => {
-    if (!latestByCode[s.code] || (s.date || '') > (latestByCode[s.code].date || '')) {
-      latestByCode[s.code] = s;
-    }
-  });
-  const lowStock = Object.values(latestByCode)
-    .filter((s) => Number(s.stock) <= 5)
-    .sort((a, b) => a.stock - b.stock);
+  const lowStock = currentStock.filter((s) => Number(s.stock) <= 5).sort((a, b) => a.stock - b.stock);
 
   return (
     <>

@@ -83,7 +83,7 @@ export default function Resellers() {
 
   const menScents = data.scents.men.filter((s) => s.status === 'ADA');
   const womenScents = data.scents.women.filter((s) => s.status === 'ADA');
-  const salesByDateDesc = [...data.resellerSales].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const salesByDateDesc = [...data.resellerSales].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
   const resellerName = (id: string) => data.resellers.find((r) => r.id === id)?.name ?? '—';
 
   return (

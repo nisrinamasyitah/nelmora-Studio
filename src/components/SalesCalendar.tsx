@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { fmt, fmtDate, latestSaleMonth } from '../lib/format';
 import type { SaleEntry } from '../types';
 
-interface SalesCalendarProps {
-  sales: SaleEntry[];
+interface SalesCalendarProps<T extends SaleEntry> {
+  sales: T[];
   onMonthChange?: (year: number, month: number) => void;
 }
 
@@ -15,13 +15,18 @@ function dayKey(year: number, month: number, day: number): string {
   return `${year}-${pad(month + 1)}-${pad(day)}`;
 }
 
-export default function SalesCalendar({ sales, onMonthChange }: SalesCalendarProps) {
+function isReseller(s: SaleEntry): s is SaleEntry & { source: 'direct' | 'reseller'; resellerName?: string } {
+  return 'source' in s;
+}
+
+export default function SalesCalendar<T extends SaleEntry>({ sales, onMonthChange }: SalesCalendarProps<T>) {
   const initialMonth = useMemo(() => {
     const { year, month } = latestSaleMonth(sales);
     return new Date(year, month, 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [monthDate, setMonthDate] = useState(initialMonth);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
@@ -29,6 +34,10 @@ export default function SalesCalendar({ sales, onMonthChange }: SalesCalendarPro
   useEffect(() => {
     onMonthChange?.(year, month);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [year, month]);
+
+  useEffect(() => {
+    setSelectedDay(null);
   }, [year, month]);
 
   const byDay = useMemo(() => {
@@ -58,6 +67,10 @@ export default function SalesCalendar({ sales, onMonthChange }: SalesCalendarPro
     return 'heat-1';
   }
 
+  function toggleDay(key: string) {
+    setSelectedDay((cur) => (cur === key ? null : key));
+  }
+
   const cells: (number | null)[] = [];
   for (let i = 0; i < firstWeekday; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
@@ -75,6 +88,8 @@ export default function SalesCalendar({ sales, onMonthChange }: SalesCalendarPro
   }
 
   const monthLabel = monthDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+  const selectedDaySales = selectedDay ? sales.filter((s) => s.date === selectedDay) : [];
 
   return (
     <div className="section-block">
@@ -108,7 +123,13 @@ export default function SalesCalendar({ sales, onMonthChange }: SalesCalendarPro
                 const key = dayKey(year, month, d);
                 const info = byDay.get(key);
                 return (
-                  <button key={key} type="button" className={`cal-cell${info ? ' ' + heatClass(info.total) : ''}`}>
+                  <button
+                    key={key}
+                    type="button"
+                    className={`cal-cell${info ? ' ' + heatClass(info.total) : ''}${selectedDay === key ? ' selected' : ''}`}
+                    onClick={() => info && toggleDay(key)}
+                    disabled={!info}
+                  >
                     <span className="cal-day-num">{d}</span>
                     {info && (
                       <span className="viz-tooltip">
@@ -128,25 +149,30 @@ export default function SalesCalendar({ sales, onMonthChange }: SalesCalendarPro
               <span className="chart-total">RM {fmt(monthTotal)} this month</span>
             </div>
             <div className="chart-bars">
-              {chartData.map((c) => (
-                <div key={c.day} className="chart-bar-col">
-                  <div
-                    className={`chart-bar${c.total > 0 ? ' has-value' : ''}`}
-                    style={{ height: `${chartMax ? Math.max((c.total / chartMax) * 100, c.total > 0 ? 3 : 0) : 0}%` }}
-                    tabIndex={c.total > 0 ? 0 : undefined}
-                  >
-                    {peakDay && c.day === peakDay.day && c.total > 0 && (
-                      <span className="chart-bar-label">RM{fmt(c.total)}</span>
-                    )}
-                    {c.total > 0 && (
-                      <span className="viz-tooltip">
-                        <b>{fmtDate(dayKey(year, month, c.day))}</b>
-                        RM {fmt(c.total)} · {c.count} sale{c.count > 1 ? 's' : ''}
-                      </span>
-                    )}
+              {chartData.map((c) => {
+                const key = dayKey(year, month, c.day);
+                return (
+                  <div key={c.day} className="chart-bar-col">
+                    <button
+                      type="button"
+                      className={`chart-bar${c.total > 0 ? ' has-value' : ''}${selectedDay === key ? ' selected' : ''}`}
+                      style={{ height: `${chartMax ? Math.max((c.total / chartMax) * 100, c.total > 0 ? 3 : 0) : 0}%` }}
+                      onClick={() => c.total > 0 && toggleDay(key)}
+                      disabled={c.total <= 0}
+                    >
+                      {peakDay && c.day === peakDay.day && c.total > 0 && (
+                        <span className="chart-bar-label">RM{fmt(c.total)}</span>
+                      )}
+                      {c.total > 0 && (
+                        <span className="viz-tooltip">
+                          <b>{fmtDate(key)}</b>
+                          RM {fmt(c.total)} · {c.count} sale{c.count > 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="chart-axis">
               <span>1</span>
@@ -154,6 +180,56 @@ export default function SalesCalendar({ sales, onMonthChange }: SalesCalendarPro
             </div>
           </div>
         </div>
+
+        {selectedDay && (
+          <div className="cal-day-detail">
+            <div className="cal-day-detail-head">
+              <h4>{fmtDate(selectedDay)}</h4>
+              <button
+                type="button"
+                className="cal-day-detail-close"
+                onClick={() => setSelectedDay(null)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Perfume</th>
+                  <th>Via</th>
+                  <th>Qty</th>
+                  <th>Notes</th>
+                  <th style={{ textAlign: 'right' }}>Total (RM)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedDaySales.map((s) => (
+                  <tr key={s.id}>
+                    <td style={{ color: 'var(--ink)', fontWeight: 500 }}>{s.perfume}</td>
+                    <td>
+                      {isReseller(s) ? (
+                        s.source === 'reseller' ? (
+                          <span className="source-tag">{s.resellerName}</span>
+                        ) : (
+                          <span className="source-tag source-tag-direct">Direct</span>
+                        )
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td className="num">{s.qty}</td>
+                    <td>{s.notes || '—'}</td>
+                    <td className="num" style={{ textAlign: 'right' }}>
+                      {fmt(s.total)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

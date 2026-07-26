@@ -109,7 +109,7 @@ export default function Finance() {
       const d = new Date(s.date + 'T00:00:00');
       return d.getFullYear() === calendarMonth.year && d.getMonth() === calendarMonth.month;
     })
-    .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
   const salesByDateDescTotal = salesByDateDesc.reduce((s, x) => s + Number(x.total || 0), 0);
   const calendarMonthLabel = new Date(calendarMonth.year, calendarMonth.month, 1).toLocaleDateString('en-GB', {
     month: 'long',

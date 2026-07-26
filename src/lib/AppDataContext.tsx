@@ -34,7 +34,7 @@ interface AppDataContextValue {
   refresh: () => Promise<void>;
   addCostItem: (category: 'rnd' | 'first_batch', name: string, cost: number) => Promise<void>;
   deleteCostItem: (id: string) => Promise<void>;
-  addSaleEntry: (entry: Omit<SaleEntry, 'id'>) => Promise<void>;
+  addSaleEntry: (entry: Omit<SaleEntry, 'id' | 'createdAt'>) => Promise<void>;
   deleteSaleEntry: (id: string) => Promise<void>;
   addBankEntry: (entry: Omit<BankEntry, 'id'>) => Promise<void>;
   deleteBankEntry: (id: string) => Promise<void>;
@@ -45,7 +45,7 @@ interface AppDataContextValue {
   deleteStockEntry: (id: string) => Promise<void>;
   addReseller: (name: string, placeCover: string) => Promise<void>;
   deleteReseller: (id: string) => Promise<void>;
-  addResellerSale: (entry: Omit<ResellerSale, 'id'>) => Promise<void>;
+  addResellerSale: (entry: Omit<ResellerSale, 'id' | 'createdAt'>) => Promise<void>;
   deleteResellerSale: (id: string) => Promise<void>;
 }
 

@@ -19,6 +19,7 @@ export interface SaleEntry {
   qty: number;
   notes: string;
   total: number;
+  createdAt: string;
 }
 
 export interface BankEntry {
@@ -61,6 +62,7 @@ export interface ResellerSale {
   qty: number;
   notes: string;
   total: number;
+  createdAt: string;
 }
 
 export interface AppData {
